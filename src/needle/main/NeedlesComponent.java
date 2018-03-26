@@ -41,10 +41,6 @@ public class NeedlesComponent extends JComponent {
 		Color randomColor = new Color(r, g, b);
 	    needles.add(new Needle(x1, y1, x2, y2, randomColor));        
 	}
-
-	public void drawNeedles() {
-		repaint();
-	}
 	
 	public void clearNeedles() {
 	    needles.clear();
@@ -62,8 +58,9 @@ public class NeedlesComponent extends JComponent {
 	    g2.drawLine(200, 0, 200, 500);
 	    g2.drawLine(300, 0, 300, 500);
 	    g2.drawLine(400, 0, 400, 500);
-	    for (Needle needle : needles) {
-	    		Shape n = new Line2D.Double(needle.x1, needle.y1, needle.x2, needle.y2);
+	    for (int i = 0; i < needles.size(); i++) {
+	    	Needle needle = needles.get(i);
+	    	Shape n = new Line2D.Double(needle.x1, needle.y1, needle.x2, needle.y2);
 	        g2.setColor(needle.c);
 	        g2.draw(n);
 	    }

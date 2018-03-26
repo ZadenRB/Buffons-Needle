@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -14,15 +15,18 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 public class Main {
+	
+	protected static int sleepTime;
+	protected static Thread t;
+	protected static boolean running;
+
 	public static boolean isNum(String str) {
 	    int size = str.length();
-
 	    for (int i = 0; i < size; i++) {
 	        if (!Character.isDigit(str.charAt(i))) {
 	            return false;
 	        }
 	    }
-
 	    return size > 0;
 	}
 	
@@ -44,48 +48,69 @@ public class Main {
 		return false;
 	}
 	
-	public static void simulate(String input, JLabel status, NeedlesComponent comp) {
-		if (isNum(input)) {
-			comp.clearNeedles();
-			long needles = Long.valueOf(input);
-			double matches = 0;
-			for (long i = 1; i <= needles; i++) {
-				if (tossNeedle(comp)) {
-					matches++;
+	public static void simulate(String input, JLabel status, JButton clr, JButton can, NeedlesComponent comp) {
+		t = new Thread() {
+			@Override
+		    public void run() {
+				comp.clearNeedles();
+				if (isNum(input)) {
+					long needles = Long.valueOf(input);
+					double matches = 0;
+					for (long i = 1; i <= needles; i++) {
+						if (!running) break;
+						if (tossNeedle(comp)) {
+							matches++;
+						}
+						comp.repaint();
+						try {
+							Thread.sleep(sleepTime);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						status.setText("Pi = " + (needles / matches) * 2);
+						status.repaint();
+					}
+				} else {
+					status.setText("<html><font color=red>Please input a whole number</font></html>");
 				}
+				clr.setEnabled(true);
+				can.setEnabled(false);
 			}
-			comp.drawNeedles();
-			status.setText("Pi = " + (needles / matches) * 2);
-		} else {
-			status.setText("<html><font color=red>Please input a whole number</font></html>");
-		}
+		};
+		t.start();
 	}
 	
 	public static void main(String args[]) {
+		sleepTime = 200;
+		running = true;
 		final NeedlesComponent comp = new NeedlesComponent();
 		JFrame frame = new JFrame("Buffon's Needle");
 		JPanel board = new JPanel(new BorderLayout());
-		JPanel input = new JPanel(new GridLayout(2, 2));
+		JPanel input = new JPanel(new GridLayout(3, 2));
 		JLabel status = new JLabel("Input a number, then click simulate:", JLabel.CENTER);	
 		JTextField in = new JTextField(JTextField.CENTER);		
 		JButton sim = new JButton("Simulate");
 		JButton clr = new JButton("Clear");
-		
-		in.setHorizontalAlignment(SwingConstants.CENTER);
-		
-		sim.setPreferredSize(new Dimension(250, 28));
-		clr.setPreferredSize(new Dimension(250, 28));
+		JButton can = new JButton("Cancel");
+		String[] speedOptions = {"Normal", "Fast", "Instant"};
+		JComboBox<String> spd = new JComboBox<String>(speedOptions);
 		
 		//Board JPanel
 		board.add(comp, BorderLayout.CENTER);
 		board.setPreferredSize(new Dimension(500, 500));
 		
 		//Input JPanel
+		in.setHorizontalAlignment(SwingConstants.CENTER);
+		can.setEnabled(false);
+		
 		input.add(status);
 		input.add(in);
 		input.add(clr);
 		input.add(sim);
-		input.setPreferredSize(new Dimension(500, 75));
+		input.add(can);
+		input.add(spd);
+		input.setPreferredSize(new Dimension(500, 103));
+		
 		
 		//Add components
 		frame.add(board, BorderLayout.CENTER);
@@ -98,16 +123,7 @@ public class Main {
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 		
-		//Textbox listener
-		in.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				String input = in.getText();
-				simulate(input, status, comp);
-			}
-		});
-		
-		//Button listeners
+		/*Button listeners*/
 		//Clear button
 		clr.addActionListener(new ActionListener() {
 			@Override
@@ -123,7 +139,42 @@ public class Main {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String input = in.getText();
-				simulate(input, status, comp);
+				running = true;
+				clr.setEnabled(false);
+				can.setEnabled(true);
+				simulate(input, status, clr, can, comp);
+			}
+		});
+		
+		//Cancel button
+		can.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				running = false;
+				comp.clearNeedles();
+				try {
+					t.join();
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+				status.setText("Input a number, then click simulate");
+				status.repaint();
+			}
+		});
+		
+		//Speed selection
+		spd.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JComboBox<String> cb = (JComboBox<String>) e.getSource();
+				switch((String)cb.getSelectedItem()) {
+					case "Normal": sleepTime = 200;
+								   break;
+					case "Fast": sleepTime = 100;
+								 break;
+					case "Instant": sleepTime = 0;
+									break;
+				}
 			}
 		});
 	}
