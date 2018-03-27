@@ -13,6 +13,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 public class Main {
 	
@@ -48,7 +49,7 @@ public class Main {
 		return false;
 	}
 	
-	public static void simulate(String input, JLabel status, JButton clr, JButton can, NeedlesComponent comp) {
+	public static void simulate(String input, JLabel status, JButton sim, JButton clr, JButton can, NeedlesComponent comp) {
 		t = new Thread() {
 			@Override
 		    public void run() {
@@ -63,7 +64,8 @@ public class Main {
 						}
 						comp.repaint();
 						try {
-							Thread.sleep(sleepTime);
+							if (sleepTime > 0)
+								Thread.sleep(sleepTime);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
@@ -73,6 +75,7 @@ public class Main {
 				} else {
 					status.setText("<html><font color=red>Please input a whole number</font></html>");
 				}
+				sim.setEnabled(true);
 				clr.setEnabled(true);
 				can.setEnabled(false);
 			}
@@ -80,7 +83,7 @@ public class Main {
 		t.start();
 	}
 	
-	public static void main(String args[]) {
+	public static void createAndShowGUI() {
 		sleepTime = 200;
 		running = true;
 		final NeedlesComponent comp = new NeedlesComponent();
@@ -140,9 +143,10 @@ public class Main {
 			public void actionPerformed(ActionEvent e) {
 				String input = in.getText();
 				running = true;
+				sim.setEnabled(false);
 				clr.setEnabled(false);
 				can.setEnabled(true);
-				simulate(input, status, clr, can, comp);
+				simulate(input, status, sim, clr, can, comp);
 			}
 		});
 		
@@ -176,6 +180,14 @@ public class Main {
 									break;
 				}
 			}
+		});
+	}
+	
+	public static void main(String args[]) {
+		SwingUtilities.invokeLater(new Runnable() {
+		    public void run() {
+		        createAndShowGUI();
+		    }
 		});
 	}
 }
