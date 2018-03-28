@@ -186,12 +186,13 @@ public class Main {
 				sim.setEnabled(true);
 				clr.setEnabled(true);
 				can.setEnabled(false);
-				comp.clearNeedles();
 				try {
 					t.join();
 				} catch (InterruptedException e1) {
 					e1.printStackTrace();
 				}
+				comp.clearNeedles();
+				comp.repaint();
 				status.setText("Input a number, then click simulate");
 				status.repaint();
 			}
@@ -201,6 +202,7 @@ public class Main {
 		spd.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				@SuppressWarnings("unchecked")
 				JComboBox<String> cb = (JComboBox<String>) e.getSource();
 				switch ((String) cb.getSelectedItem()) {
 				case "Normal":
